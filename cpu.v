@@ -60,7 +60,9 @@ module main();
     wire is_movh = opcode == 4'b1001;
     wire is_jump = opcode == 4'b1110;
     wire is_mem_access = opcode == 4'b1111;
+    wire is_ld = rb == 4'b0000;
     wire is_str = rb == 4'b0001;
+    wire is_halt = !(is_sub | is_movl | is_movh | is_jump | (is_mem_access && (is_ld | is_str)));
 
     assign raddr0 = is_sub ? ra :
                     is_movh ? rt : 
@@ -68,8 +70,8 @@ module main();
                     ra;
     assign raddr1 = rt;
 
-    wire [15:0] rdata0_z = rdata0;//raddr0 == 4'b0000 ? 0: rdata0;
-    wire [15:0] rdata1_z = rdata1;//raddr1 == 4'b0000 ? 0 : rdata1;
+    wire [15:0] rdata0_z = raddr0 == 4'b0000 ? 0: rdata0;
+    wire [15:0] rdata1_z = raddr1 == 4'b0000 ? 0 : rdata1;
     assign m_raddr1 = rdata0_z;
 
     //execute
@@ -85,31 +87,41 @@ module main();
     assign waddr = rt;
     assign wdata = result;
     always @(posedge clk) begin
-        $write("pc = %d\n",pc);
-        $write("counter = %d\n",counter);
-        $write("opcode = %d\n",opcode);
-        $write("ra = %d\n",ra);
-        $write("rb = %d\n",rb);
-        $write("rt = %d\n",rt);
+        if(is_halt) halt <= 1;
+        // $write("pc = %d\n",pc);
+        // $write("counter = %d\n",counter);
+        // $write("opcode = %d\n",opcode);
+        // $write("ra = %d\n",ra);
+        // $write("rb = %d\n",rb);
+        // $write("rt = %d\n",rt);
+        // $write("m_wen = %d\n",m_wen);
+        // $write("m_wdata = %d\n",m_wdata);
+        // $write("m_waddr = %d\n",m_waddr);
+        // $write("wen = %d\n",wen);
+        // $write("waddr = %d\n",waddr);
+        // $write("wdata = %d\n",wdata);
+        // $write("\n");
 
         counter <= counter + 1;
 
         if (counter == 7) begin 
-            $write("m_waddr = %d\n",m_waddr);
+            //$write("m_waddr = %d\n",m_waddr);
             if(is_jump) pc <= jump_addr;
             else begin 
-                pc <= pc + 1;
+                pc <= pc + 2;
                 if(is_mem_access && is_str) begin
                     m_wen <= 1;
                 end
                 else begin
-                    if(waddr == 4'b0000) $display("s%c\n", wdata[7:0]);
+                    if(waddr == 4'b0000) $write("%c", wdata[7:0]);
                     else wen <= 1;
                 end
             end
         end
 
         if(counter == 8) begin
+            wen <= 0;
+            m_wen <= 0;
             counter <= 0;
         end
     end
