@@ -68,30 +68,34 @@ module main();
                     ra;
     assign raddr1 = rt;
 
-    assign m_raddr1 = rdata0;
+    wire [15:0] rdata0_z = rdata0;//raddr0 == 4'b0000 ? 0: rdata0;
+    wire [15:0] rdata1_z = rdata1;//raddr1 == 4'b0000 ? 0 : rdata1;
+    assign m_raddr1 = rdata0_z;
 
-    wire [15:0] mov = is_str;
     //execute
-    wire [15:0] result = is_sub ? rdata0 - rdata1 : 
+    wire [15:0] result = is_sub ? rdata0_z - rdata1_z : 
                         is_movl ? {{7{ra[3]}}, ra, rb} : 
                         is_movh ?  (rdata0 & 8'hff) | (something[11:4] << 8): //(rdata0 & 0xff) | (something[11:4] << 8)
                         is_str ? raddr1 : m_rdata1;
 
-    wire [15:0] jump_addr = (rb == 4'b0000 ? rdata0 == 0 : rb == 4'b0001 ? rdata0 != 0 :
-                                    rb == 4'b0010 ? rdata0 < 0 : rdata0 >= 0) ? rdata1 : pc + 2;
-    assign m_wdata = rdata0;
-    assign m_wdata = rdata1;
+    wire [15:0] jump_addr = (rb == 4'b0000 ? rdata0_z == 0 : rb == 4'b0001 ? rdata0_z != 0 :
+                                    rb == 4'b0010 ? rdata0_z < 0 : rdata0_z >= 0) ? rdata1_z : pc + 2;
+    assign m_waddr = rdata0_z;
+    assign m_wdata = rdata1_z;
     assign waddr = rt;
     assign wdata = result;
     always @(posedge clk) begin
-        if (pc == 10) begin
-            halt <= 1;
-        end
         $write("pc = %d\n",pc);
+        $write("counter = %d\n",counter);
+        $write("opcode = %d\n",opcode);
+        $write("ra = %d\n",ra);
+        $write("rb = %d\n",rb);
+        $write("rt = %d\n",rt);
 
         counter <= counter + 1;
 
-        if (counter == 7) begin
+        if (counter == 7) begin 
+            $write("m_waddr = %d\n",m_waddr);
             if(is_jump) pc <= jump_addr;
             else begin 
                 pc <= pc + 1;
@@ -99,7 +103,8 @@ module main();
                     m_wen <= 1;
                 end
                 else begin
-                    wen <= 1;
+                    if(waddr == 4'b0000) $display("s%c\n", wdata[7:0]);
+                    else wen <= 1;
                 end
             end
         end
