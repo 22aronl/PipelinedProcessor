@@ -18,43 +18,92 @@ module main();
     // PC
     reg [15:0]pc = 16'h0000;
 
-    // read from memory
-    wire [15:0]something;
-
+    // memory
+    wire [15:0] instruction;
     wire [15:0] m_raddr1;
     wire [15:0] m_rdata1;
-    reg m_wen;
-    wire [15:0] m_wdata;
+    reg m_wen = 0;
     wire [15:0] m_waddr;
+    wire [15:0] m_wdata;
 
-    // memory
-    mem mem(clk,
-         pc[15:1],something,m_raddr1[15:1],m_rdata1,m_wen,m_waddr[15:1],m_wdata);
+    mem mem(
+        .clk(clk),
+        .raddr0_(pc[15:1]),
+        .rdata0_(instruction),
+        .raddr1_(m_raddr1[15:1]),
+        .rdata1_(m_rdata1),
+        .wen(m_wen),
+        .waddr(m_waddr[15:1]),
+        .wdata(m_wdata)
+    );
 
 
     // registers
-    wire [3:0] raddr0;
-    wire [3:0] raddr1;
-    wire [15:0] rdata0;
-    wire [15:0] rdata1;
-    wire [3:0] waddr;
-    wire [15:0] wdata;
-    reg wen;
+    // wire [3:0] r_raddr0;
+    // wire [15:0] r_rdata0;
+    // wire [3:0] r_raddr1;
+    // wire [15:0] r_rdata1;
+    // reg r_wen = 0;
+    // wire [3:0] r_waddr;
+    // wire [15:0] r_wdata;
+
+    // regs regs(
+    //     .clk(clk),
+    //     .raddr0_(r_raddr0), 
+    //     .rdata0(r_rdata0),
+    //     .raddr1_(r_raddr1), 
+    //     .rdata1(r_rdata1),
+    //     .wen(r_wen), 
+    //     .waddr(r_waddr), 
+    //     .wdata(r_wdata)
+    // );
+    wire [3:0] r_raddr0;
+    wire [3:0] r_raddr1;
+    wire [15:0] r_rdata0;
+    wire [15:0] r_rdata1;
+    wire [3:0] r_waddr;
+    wire [15:0] r_wdata;
+    reg r_wen;
 
     regs regs(clk,
-        raddr0, rdata0,
-        raddr1, rdata1,
-        wen, waddr, wdata);
+        r_raddr0, r_rdata0,
+        r_raddr1, r_rdata1,
+        r_wen, r_waddr, vwdata);
 
-    // fetch
-    reg [3:0] counter = 0;
 
-    //decode
-    wire [3:0] opcode = something[15:12];
-    wire [3:0] ra = something[11:8];
-    wire [3:0] rb = something[7:4];
-    wire [3:0] rt = something[3:0];
+    //fetch
 
+    //fetch1
+    reg [15:0] f1_pc;
+    reg f1_valid = 0;
+
+    always @(posedge clk) begin
+        f1_pc <= pc;
+        f1_valid <= 1;
+    end
+
+    //fetch2
+    reg [15:0] f2_pc;
+    reg f2_valid = 0;
+
+    always @(posedge clk) begin
+        f2_pc <= f1_pc;
+        f2_valid <= f1_valid;
+    end
+
+    // //decode
+
+    //decode1
+    reg [15:0] d1_pc;
+    reg d1_valid = 0;
+    reg [16:0] d1_instruct_info;
+
+    wire [3:0] opcode = instruction[15:12];
+    wire [3:0] ra = instruction[11:8];
+    wire [3:0] rb = instruction[7:4];
+    wire [3:0] rt = instruction[3:0];
+
+    //is there a better way of doing this?
     wire is_sub = opcode == 4'b0000;
     wire is_movl = opcode == 4'b1000;
     wire is_movh = opcode == 4'b1001;
@@ -64,66 +113,36 @@ module main();
     wire is_str = rb == 4'b0001;
     wire is_halt = !(is_sub | is_movl | is_movh | is_jump | (is_mem_access && (is_ld | is_str)));
 
-    assign raddr0 = is_sub ? ra :
-                    is_movh ? rt : 
-                    is_jump ? ra :
-                    ra;
-    assign raddr1 = rt;
+    //same here
+    wire [16:0] instruct_info = {ra, rb, rt, is_sub, is_movl, is_movh, is_jump, is_mem_access, is_ld, is_str, is_halt};
 
-    wire [15:0] rdata0_z = raddr0 == 4'b0000 ? 0: rdata0;
-    wire [15:0] rdata1_z = raddr1 == 4'b0000 ? 0 : rdata1;
-    assign m_raddr1 = rdata0_z;
+    assign r_raddr0 = is_movh ? rt : ra;
+    assign r_raddr1 = is_sub ? rb : rt;
 
-    //execute
-    wire [15:0] result = is_sub ? rdata0_z - rdata1_z : 
-                        is_movl ? {{7{ra[3]}}, ra, rb} : 
-                        is_movh ?  (rdata0 & 8'hff) | (something[11:4] << 8): //(rdata0 & 0xff) | (something[11:4] << 8)
-                        is_str ? raddr1 : m_rdata1;
-
-    wire [15:0] jump_addr = (rb == 4'b0000 ? rdata0_z == 0 : rb == 4'b0001 ? rdata0_z != 0 :
-                                    rb == 4'b0010 ? rdata0_z < 0 : rdata0_z >= 0) ? rdata1_z : pc + 2;
-    assign m_waddr = rdata0_z;
-    assign m_wdata = rdata1_z;
-    assign waddr = rt;
-    assign wdata = result;
     always @(posedge clk) begin
-        if(is_halt) halt <= 1;
-        // $write("pc = %d\n",pc);
-        // $write("counter = %d\n",counter);
-        // $write("opcode = %d\n",opcode);
-        // $write("ra = %d\n",ra);
-        // $write("rb = %d\n",rb);
-        // $write("rt = %d\n",rt);
-        // $write("m_wen = %d\n",m_wen);
-        // $write("m_wdata = %d\n",m_wdata);
-        // $write("m_waddr = %d\n",m_waddr);
-        // $write("wen = %d\n",wen);
-        // $write("waddr = %d\n",waddr);
-        // $write("wdata = %d\n",wdata);
-        // $write("\n");
+        d1_pc <= f2_pc;
+        d1_valid <= f2_valid;
+        d1_instruct_info <= instruct_info;
+    end
 
-        counter <= counter + 1;
+    //decode 2
+    reg [15:0] d2_pc;
+    reg d2_valid = 0;
+    reg [16:0] d2_instruct_info;
 
-        if (counter == 7) begin 
-            //$write("m_waddr = %d\n",m_waddr);
-            if(is_jump) pc <= jump_addr;
-            else begin 
-                pc <= pc + 2;
-                if(is_mem_access && is_str) begin
-                    m_wen <= 1;
-                end
-                else begin
-                    if(waddr == 4'b0000) $write("%c", wdata[7:0]);
-                    else wen <= 1;
-                end
-            end
-        end
+    always @(posedge clk) begin
+        d2_pc <= d1_pc;
+        d2_valid <= d1_valid;
+        d2_instruct_info <= d1_instruct_info;
+    end
 
-        if(counter == 8) begin
-            wen <= 0;
-            m_wen <= 0;
-            counter <= 0;
-        end
+    assign m_raddr1 = r_rdata0;
+
+    always @(posedge clk) begin
+        if (pc == 12) halt <= 1;
+        $display("pc: %h", pc);
+        $display("r_rdata0: %h", r_rdata0);
+        pc <= pc + 2;
     end
 
 
