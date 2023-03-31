@@ -67,16 +67,7 @@ module main();
 
     always @(posedge clk) begin
         f1_pc <= pc;
-        f1_valid <= 1'b1;
-    end
-
-    //fetch2
-    reg [15:0] f2_pc;
-    reg f2_valid = 1'b0;
-
-    always @(posedge clk) begin
-        f2_pc <= f1_pc;
-        f2_valid <= f1_valid;
+        f1_valid <= 1'b1 & !flush;
     end
 
     // //decode
@@ -107,58 +98,69 @@ module main();
     wire is_r00 = r_raddr0 == 4'b0000;
     wire is_r10 = r_raddr1 == 4'b0000;
     //same here
-    wire [18:0] instruct_info = {ra, rb, rt, is_sub, is_movl, is_movh, is_jump, is_mem_access, is_ld, is_str, is_halt, is_r00, is_r10};
+    wire [21:0] instruct_info = {ra, rb, rt, is_sub, is_movl, is_movh, is_jump, is_mem_access, is_ld, is_str, is_halt, is_r00, is_r10};
 
     always @(posedge clk) begin
-        d1_pc <= f2_pc;
-        d1_valid <= f2_valid;
-        d1_instruct_info <= instruct_info;
+        d1_pc <= f1_pc;
+        d1_valid <= f1_valid & !flush;
+        //d1_instruct_info <= instruct_info;
     end
 
     //decode 2
     reg [15:0] d2_pc;
     reg d2_valid = 1'b0;
-    reg [18:0] d2_instruct_info;
+    reg [21:0] d2_instruct_info;
 
     always @(posedge clk) begin
         d2_pc <= d1_pc;
-        d2_valid <= d1_valid;
-        d2_instruct_info <= d1_instruct_info;
+        d2_valid <= d1_valid & !flush;
+        d2_instruct_info <= instruct_info;
     end
 
     //memory fetch
     //mem1
     reg [15:0] m1_pc;
     reg m1_valid = 1'b0;
-    reg [18:0] m1_instruct_info;
+    reg [21:0] m1_instruct_info;
+    reg [15:0] m1_rdata0;
+    reg [15:0] m1_rdata1;
+
 
     assign m_raddr1 = m1_instruct_info[1] ? r_rdata0 : 16'h0000;
 
     always @(posedge clk) begin
         m1_pc <= d2_pc;
-        m1_valid <= d2_valid;
+        m1_valid <= d2_valid & !flush;
         m1_instruct_info <= d2_instruct_info;
+        m1_rdata0 <= r_rdata0;
+        m1_rdata1 <= r_rdata1;
     end
 
     //mem2
     reg [15:0] m2_pc;
     reg m2_valid = 1'b0;
-    reg [18:0] m2_instruct_info;
+    reg [21:0] m2_instruct_info;
+    reg [15:0] m2_rdata0;
+    reg [15:0] m2_rdata1;
 
     always @(posedge clk) begin
         m2_pc <= m1_pc;
-        m2_valid <= m1_valid;
+        m2_valid <= m1_valid & !flush;
         m2_instruct_info <= m1_instruct_info;
+        m2_rdata0 <= m1_rdata0;
+        m2_rdata1 <= m1_rdata1;
     end
 
     //execute
     reg [15:0] e_pc;
     reg e_valid = 0;
-    reg [18:0] e_instruct_info;
+    reg [24:0] e_instruct_info;
+    reg [15:0] e_rdata0;
+    reg [15:0] e_rdata1;
 
-    wire [3:0] e_ra = e_instruct_info[18:16];
-    wire [3:0] e_rb = e_instruct_info[15:13];
-    wire [3:0] e_rt = e_instruct_info[12:10];
+    wire [3:0] e_ra = e_instruct_info[21:18];
+    wire [3:0] e_rb = e_instruct_info[17:14];
+    wire [3:0] e_rt = e_instruct_info[13:10];
     wire e_is_sub = e_instruct_info[9];
     wire e_is_movl = e_instruct_info[8];
     wire e_is_movh = e_instruct_info[7];
@@ -170,8 +172,8 @@ module main();
     wire e_is_r00 = e_instruct_info[1];
     wire e_is_r10 = e_instruct_info[0];
 
-    wire [15:0] z_rdata0 = e_is_r00 ? 16'h0000 : r_rdata0;
-    wire [15:0] z_rdata1 = e_is_r10 ? 16'h0000 : r_rdata1;
+    wire [15:0] z_rdata0 = e_is_r00 ? 16'h0000 : e_rdata0;
+    wire [15:0] z_rdata1 = e_is_r10 ? 16'h0000 : e_rdata1;
 
     wire [15:0] result = e_is_sub ? z_rdata0 - z_rdata1 :
                             e_is_movl ? {{7{e_ra[3]}}, e_ra, e_rb} :
@@ -185,29 +187,39 @@ module main();
 
     always @(posedge clk) begin
         e_pc <= m2_pc;
-        e_valid <= m2_valid;
+        e_valid <= m2_valid & !flush;
         e_instruct_info <= m2_instruct_info;
+        e_rdata0 <= m2_rdata0;
+        e_rdata1 <= m2_rdata1;
     end
 
     //writeback
+    wire flush = (jump_addr != m2_pc) & e_valid;
 
     assign m_waddr = z_rdata0;
     assign m_wdata = z_rdata1;
     assign r_waddr = e_rt;
     assign r_wdata = result;
-    assign m_wen = e_is_mem_access & e_is_str;
-    assign r_wen = (r_waddr != 4'b0000) & (e_is_sub | e_is_movl | e_is_movh | e_is_mem_access & e_is_ld);
+    assign m_wen = e_valid & e_is_mem_access & e_is_str;
+    assign r_wen = e_valid & (r_waddr != 4'b0000) & (e_is_sub | e_is_movl | e_is_movh | e_is_mem_access & e_is_ld);
 
     
     //do something with the pc
     always @(posedge clk) begin
-        if (e_is_halt) halt <= 1;
-        if(r_waddr == 4'b0000) $write("%c", r_wdata[7:0]);
-        //pc <= jump_addr;
+        if (e_valid & e_is_halt) halt <= 1;
+        // $display("pc: %h", e_pc);
+        // $display("is_sub %b", e_is_sub);
+        // $display("is_movl %b", e_is_movl);
+        // $display("%h", r_wdata);
+        // $display("%h", r_waddr);
+        if(e_valid & r_waddr == 4'b0000) $write("%c\n", r_wdata[7:0]);
     end
 
     always @(posedge clk) begin
-        if(pc == 20) halt <= 1;
-        pc <= pc + 2;
+        if(pc == 50) halt <= 1;
+        // $display("flush: %b", flush);
+        // $display("jump_addr: %h", jump_addr);
+        if(flush) pc <= jump_addr;
+        else pc <= pc + 2;
     end
 endmodule
