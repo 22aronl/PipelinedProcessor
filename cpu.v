@@ -58,6 +58,19 @@ module main();
         .wdata(r_wdata)
     );
 
+    reg [3:0] reg_in_use[0:15];
+    integer i;
+    initial begin
+        for(i = 0; i < 16; i = i + 1) begin
+            reg_in_use[i] = 4'b0000;
+        end
+    end
+
+    wire [3:0] reg0 = reg_in_use[0];
+    wire [3:0] reg1 = reg_in_use[1];
+    wire [3:0] reg2 = reg_in_use[2];
+    wire [3:0] reg3 = reg_in_use[3];
+    wire [3:0] reg4 = reg_in_use[4];
 
     //fetch
 
@@ -66,16 +79,19 @@ module main();
     reg f1_valid = 1'b0;
 
     always @(posedge clk) begin
-        f1_pc <= pc;
+        f1_pc <= d1_stall ? f1_pc : pc;
         f1_valid <= 1'b1 & !flush;
     end
 
     // //decode
-
+    wire d1_stall;
     //decode1
     reg [15:0] d1_pc;
     reg d1_valid = 1'b0;
     reg [18:0] d1_instruct_info;
+
+    wire [15:0] d1_instruction_wire = d1_stall ? d1_instruction : instruction;
+    reg [15:0] d1_instruction;
 
     wire [3:0] opcode = instruction[15:12];
     wire [3:0] ra = instruction[11:8];
@@ -86,6 +102,7 @@ module main();
     wire is_sub = opcode == 4'b0000;
     wire is_movl = opcode == 4'b1000;
     wire is_movh = opcode == 4'b1001;
+    //add check for the individual jumps
     wire is_jump = opcode == 4'b1110;
     wire is_mem_access = opcode == 4'b1111;
     wire is_ld = rb == 4'b0000;
@@ -97,12 +114,18 @@ module main();
 
     wire is_r00 = r_raddr0 == 4'b0000;
     wire is_r10 = r_raddr1 == 4'b0000;
+
+    //can be optimized to only use reg when it is actually beign used
+    assign d1_stall = 0;//d1_valid & ((!is_r00 & reg_in_use[r_raddr0] != 4'b0000) | (!is_r10 & reg_in_use[r_raddr1] != 4'b0000));
+
     //same here
     wire [21:0] instruct_info = {ra, rb, rt, is_sub, is_movl, is_movh, is_jump, is_mem_access, is_ld, is_str, is_halt, is_r00, is_r10};
 
     always @(posedge clk) begin
-        d1_pc <= f1_pc;
-        d1_valid <= f1_valid & !flush;
+        d1_pc <= d1_stall ? d1_pc : f1_pc;
+        d1_valid <= d1_stall ? d1_valid : f1_valid & !flush;
+        d1_instruction <= d1_stall ? d1_instruction : instruction;
+
         //d1_instruct_info <= instruct_info;
     end
 
@@ -113,8 +136,10 @@ module main();
 
     always @(posedge clk) begin
         d2_pc <= d1_pc;
-        d2_valid <= d1_valid & !flush;
+        d2_valid <= d1_valid & !flush & !d1_stall;
         d2_instruct_info <= instruct_info;
+        if(!d1_stall & d1_valid & !is_jump)
+            reg_in_use[rt] <= reg_in_use[rt] + 1;
     end
 
     //memory fetch
@@ -207,19 +232,24 @@ module main();
     //do something with the pc
     always @(posedge clk) begin
         if (e_valid & e_is_halt) halt <= 1;
+        if (e_valid & !e_is_jump) reg_in_use[e_rt] <= reg_in_use[e_rt] - 1;
         // $display("pc: %h", e_pc);
         // $display("is_sub %b", e_is_sub);
         // $display("is_movl %b", e_is_movl);
         // $display("%h", r_wdata);
         // $display("%h", r_waddr);
-        if(e_valid & r_waddr == 4'b0000) $write("%c\n", r_wdata[7:0]);
+        if(e_valid & r_waddr == 4'b0000) $write("%c", r_wdata[7:0]);
     end
 
     always @(posedge clk) begin
         if(pc == 50) halt <= 1;
         // $display("flush: %b", flush);
         // $display("jump_addr: %h", jump_addr);
-        if(flush) pc <= jump_addr;
+        if(flush) begin
+            pc <= jump_addr;
+            for(i = 0; i < 16; i = i + 1) reg_in_use[i] <= 0;
+        end
+        else if(d1_stall) pc <= pc;
         else pc <= pc + 2;
     end
 endmodule
