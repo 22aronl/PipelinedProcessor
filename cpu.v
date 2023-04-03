@@ -78,7 +78,7 @@ module main();
     end
 
     // //decode
-    wire d1_stall;
+    wire d1_stall = 1'b0;
     //decode1
     reg [15:0] d1_pc;
     reg d1_valid = 1'b0;
@@ -95,7 +95,7 @@ module main();
 
     wire d1_use_q;
     wire [15:0] d1_q_instruction;
-    wire [15:0] d1_instruction = d1_use_q ? d1_q_instruction : instruction;
+    wire [15:0] d1_instruction = instruction;//d1_use_q ? d1_q_instruction : instruction;
 
     wire [3:0] opcode = d1_instruction[15:12];
     wire [3:0] ra = d1_instruction[11:8];
@@ -130,18 +130,18 @@ module main();
         d1_valid <= d1_stall ? d1_valid : f1_valid & !flush;
     end
 
-    //decode 2
-    reg [15:0] d2_pc;
-    reg d2_valid = 1'b0;
-    reg [21:0] d2_instruct_info;
+    // //decode 2
+    // reg [15:0] d2_pc;
+    // reg d2_valid = 1'b0;
+    // reg [21:0] d2_instruct_info;
 
-    always @(posedge clk) begin
-        d2_pc <= d1_pc;
-        d2_valid <= d1_valid & !flush & !d1_stall;
-        d2_instruct_info <= instruct_info;
-        if(!d1_stall & d1_valid & !is_jump)
-            reg_in_use[rt] <= reg_in_use[rt] + 1;
-    end
+    // always @(posedge clk) begin
+    //     d2_pc <= d1_pc;
+    //     d2_valid <= d1_valid & !flush & !d1_stall;
+    //     d2_instruct_info <= instruct_info;
+    //     if(!d1_stall & d1_valid & !is_jump)
+    //         reg_in_use[rt] <= reg_in_use[rt] + 1;
+    // end
 
     //memory fetch
     //mem1
@@ -155,9 +155,9 @@ module main();
     assign m_raddr1 = m1_instruct_info[1] ? r_rdata0 : 16'h0000;
 
     always @(posedge clk) begin
-        m1_pc <= d2_pc;
-        m1_valid <= d2_valid & !flush;
-        m1_instruct_info <= d2_instruct_info;
+        m1_pc <= d1_pc;
+        m1_valid <= d1_valid & !flush;
+        m1_instruct_info <= instruct_info;
         m1_rdata0 <= r_rdata0;
         m1_rdata1 <= r_rdata1;
     end
@@ -213,9 +213,8 @@ module main();
                                 e_pc + 2;
 
     
-    wire flush = e_valid & m2_valid & (jump_addr != m2_pc);
-
     always @(posedge clk) begin
+        $display("jump_addr: %h, m2_pc %h, e_valid %b", jump_addr, m2_pc, e_valid);
         e_pc <= m2_pc;
         e_valid <= m2_valid & !flush;
         e_instruct_info <= m2_instruct_info;
@@ -247,7 +246,7 @@ module main();
     end
 
     always @(posedge clk) begin
-        //if(pc == 50) halt <= 1;
+        //if(pc == 100) halt <= 1;
         // $display("flush: %b", flush);
         // $display("jump_addr: %h", jump_addr);
         //$display("pc: %h", pc);
