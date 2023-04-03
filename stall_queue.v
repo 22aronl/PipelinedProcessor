@@ -8,12 +8,21 @@ module stall_queue(
     reg [3:0] tail = 3'b000;
     reg [1:0] stall_time = 2'b00;
     reg [1:0] stall_counter = 2'b00;
+    reg [15:0] previous;
 
-    //I think max stall time is 2 cycles
+    //Assume that stalls are always 1 cycle long.
     assign use_q = stall | stall_time != 2'b00;
-    assign out_instruction = buffer[(head+SIZE - 1)%SIZE];
+    assign out_instruction = stall ? previous : cur_instruction;//
+
+    wire [15:0] a = buffer[0];
+    wire [15:0] b = buffer[1];
+    wire [15:0] c = buffer[2];
+    wire [15:0] d = buffer[3];
+    wire [15:0] e = buffer[4];
+
 
     always @(posedge clk) begin
+        previous <= cur_instruction;
         if(flush) begin
             stall_time <= 2'b00;
             stall_counter <= 2'b00;
@@ -21,16 +30,11 @@ module stall_queue(
             tail <= 3'b000;
         end
         else if (stall) begin
-            stall_time <= stall_time + 1;
-            // buffer[tail] <= cur_instruction;
-            // tail <= (tail + 1) % 2;
-            stall_counter <= stall_counter + 1;
-        end
-        else if(stall_time > 2'b00) begin
-            stall_time <= stall_time - 1;
+            if(stall_counter == 2'b00)
+                stall_counter <= 2'b01;
         end
 
-        head <= (head + 1) % SIZE;
+        if(!stall) head <= (head + 1) % SIZE;
 
         if(stall_counter == 2'b00) begin
             buffer[tail] <= cur_instruction;
