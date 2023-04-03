@@ -1,20 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.108 (w)1999-2020 BSI
-[*] Mon Apr 03 06:18:17 2023
+[*] Mon Apr 03 23:17:42 2023
 [*]
-[dumpfile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\t1.vcd"
-[dumpfile_mtime] "Mon Apr 03 06:17:47 2023"
-[dumpfile_size] 10060
+[dumpfile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\t3.vcd"
+[dumpfile_mtime] "Mon Apr 03 23:17:16 2023"
+[dumpfile_size] 15076
 [savefile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\vcd_viewer.gtkw"
 [timestart] 0
-[size] 1697 765
+[size] 1597 925
 [pos] -1 -1
-*-12.000000 4910 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-12.000000 5590 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] main.
 [sst_width] 254
-[signals_width] 174
+[signals_width] 198
 [sst_expanded] 1
-[sst_vpaned_height] 241
+[sst_vpaned_height] 333
 @22
 main.pc[15:0]
 main.f1_pc[15:0]
@@ -25,21 +25,45 @@ main.m2_pc[15:0]
 @28
 main.e_is_jump
 main.flush
+main.d1_stall
 @22
-main.m2_jump_addr[15:0]
-main.m1_jump_addr[15:0]
-main.jump_addr[15:0]
-main.z_rdata1[15:0]
+main.buffers.a[15:0]
+main.buffers.b[15:0]
+main.buffers.c[15:0]
+main.buffers.d[15:0]
+main.buffers.e[15:0]
+main.buffers.cur_instruction[15:0]
+main.buffers.out_instruction[15:0]
+main.m1_ra[3:0]
+main.m2_rt[3:0]
 @28
-main.r_wen
+main.m1_valid
+main.m2_valid
 @22
 main.r_waddr[3:0]
 main.r_wdata[15:0]
-main.r_rdata1[15:0]
-main.jump_addr[15:0]
-main.e_rb[3:0]
 main.z_rdata0[15:0]
-@23
 main.z_rdata1[15:0]
+main.for1_data[15:0]
+main.for1_rt[3:0]
+@28
+main.for1_valid[1:0]
+@22
+main.for2_data[15:0]
+main.for2_rt[3:0]
+@28
+main.for2_valid[1:0]
+@22
+main.for3_data[15:0]
+main.for3_rt[3:0]
+@28
+main.for3_valid[1:0]
+main.e_valid
+main.pull_forward
+@22
+main.result[15:0]
+main.m_raddr1[15:0]
+@23
+main.e_pc[15:0]
 [pattern_trace] 1
 [pattern_trace] 0

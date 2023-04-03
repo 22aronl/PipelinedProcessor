@@ -267,18 +267,18 @@ module main();
     always @(posedge clk) begin
         //$display("m_rdata1: %h", m_rdata1);
         //$display("for1_data: %h, for1_rt: %h, for1_valid: %h", for1_data, for1_rt, for1_valid);
-        for1_data <= e_valid | !d1_stall ? result : for1_data;
-        for1_rt <= e_valid | !d1_stall ? e_rt : for1_rt;
-        for1_valid <= e_valid| !d1_stall ;
+        for1_data <= e_valid  ? result : for1_data;
+        for1_rt <= e_valid  ? e_rt : for1_rt;
+        for1_valid <= e_valid ? 1'b1 : for1_valid;
 
         //$display("for2_data: %h, for2_rt: %h, for2_valid: %h", for2_data, for2_rt, for2_valid);
-        for2_data <= e_valid | !d1_stall ? for1_data : for2_data;
-        for2_rt <= e_valid | !d1_stall ? for1_rt : for2_rt;
-        for2_valid <= e_valid | !d1_stall ? for1_valid : for2_valid;
+        for2_data <= e_valid ? for1_data : for2_data;
+        for2_rt <= e_valid ? for1_rt : for2_rt;
+        for2_valid <= e_valid ? for1_valid : for2_valid;
 
-        for3_data <= e_valid | !d1_stall ? for2_data : for3_data;
-        for3_rt <= e_valid | !d1_stall ? for2_rt : for3_rt;
-        for3_valid <= e_valid | !d1_stall ? for2_valid : for3_valid;
+        for3_data <= e_valid ? for2_data : for3_data;
+        for3_rt <= e_valid  ? for2_rt : for3_rt;
+        for3_valid <= e_valid ? for2_valid : for3_valid;
 
     end
 
