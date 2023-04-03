@@ -94,7 +94,7 @@ module main();
         .out_instruction(d1_instruction)
     );
 
-    wire [15:0] d1_instruction_wire = use_q ? d1_instruction : instruction;
+    wire [15:0] d1_instruction_wire = d1_instruction;//use_q ? d1_instruction : instruction;
     wire [15:0] d1_instruction;
 
     wire [3:0] opcode = d1_instruction_wire[15:12];
