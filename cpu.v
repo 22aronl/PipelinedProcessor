@@ -144,40 +144,40 @@ module main();
     // end
 
 
-    // //memory fetch
-    // //mem1
-    // reg [15:0] m1_pc;
-    // reg m1_valid = 1'b0;
-    // reg [29:0] m1_instruct_info;
-    // reg [15:0] m1_rdata0;
-    // reg [15:0] m1_rdata1;
+    //memory fetch
+    //mem1
+    reg [15:0] m1_pc;
+    reg m1_valid = 1'b0;
+    reg [29:0] m1_instruct_info;
+    reg [15:0] m1_rdata0;
+    reg [15:0] m1_rdata1;
 
+    assign m_raddr1 = r_rdata0;
 
+    always @(posedge clk) begin
+        m1_pc <= d1_pc;
+        m1_valid <= d1_valid & !flush;
+        m1_instruct_info <= instruct_info;
+        m1_rdata0 <= r_rdata0;
+        m1_rdata1 <= r_rdata1;
+    end
 
-    // always @(posedge clk) begin
-    //     m1_pc <= d2_pc;
-    //     m1_valid <= d2_valid & !flush;
-    //     m1_instruct_info <= d2_instruct_info;
-    //     m1_rdata0 <= r_rdata0;
-    //     m1_rdata1 <= r_rdata1;
-    // end
+    //mem2
+    reg [15:0] m2_pc;
+    reg m2_valid = 1'b0;
+    reg [29:0] m2_instruct_info;
+    reg [15:0] m2_rdata0;
+    reg [15:0] m2_rdata1;
 
-    // //mem2
-    // reg [15:0] m2_pc;
-    // reg m2_valid = 1'b0;
-    // reg [29:0] m2_instruct_info;
-    // reg [15:0] m2_rdata0;
-    // reg [15:0] m2_rdata1;
+    assign d1_stall = 1'b0;
 
-    // always @(posedge clk) begin
-    //     m2_pc <= m1_pc;
-    //     m2_valid <= m1_valid & !flush;
-    //     m2_instruct_info <= m1_instruct_info;
-    //     m2_rdata0 <= m1_rdata0;
-    //     m2_rdata1 <= m1_rdata1;
-    // end
-
-    assign m_raddr1 = z_rdata0;
+    always @(posedge clk) begin
+        m2_pc <= m1_pc;
+        m2_valid <= m1_valid & !flush;
+        m2_instruct_info <= m1_instruct_info;
+        m2_rdata0 <= m1_rdata0;
+        m2_rdata1 <= m1_rdata1;
+    end
 
 
     //execute
@@ -206,31 +206,21 @@ module main();
     reg [15:0] prev_rdata0;
     reg [15:0] prev_rdata1;
 
-    wire [15:0] e0_rdata0 = e_is_r00 ? 16'h0000 : d1_stall ? prev_rdata0 : r_rdata0;
-    wire [15:0] e0_rdata1 = e_is_r10 ? 16'h0000 : d1_stall ? prev_rdata1 : r_rdata1;
+    wire [15:0] e0_rdata0 = e_is_r00 ? 16'h0000 : e_rdata0;
+    wire [15:0] e0_rdata1 = e_is_r10 ? 16'h0000 : e_rdata1;
 
     wire [15:0] e3_rdata0 = (for3_valid && for3_rt == e_r0) ? for3_data : e0_rdata0;
     wire [15:0] e3_rdata1 = (for3_valid && for3_rt == e_r1) ? for3_data : e0_rdata1;
-    wire e3_useld_r0 = (for3_valid == 2'b10 && for3_rt == e_r0);
-    wire e3_useld_r1 = (for3_valid == 2'b10 && for3_rt == e_r1);
-
 
     wire [15:0] e2_rdata0 = (for2_valid && for2_rt == e_r0) ? for2_data : e3_rdata0;
     wire [15:0] e2_rdata1 = (for2_valid && for2_rt == e_r1) ? for2_data : e3_rdata1;
-    wire e2_useld_r0 = (for2_valid == 2'b10 && for2_rt == e_r0) ? 1'b1 : e3_useld_r0;
-    wire e2_useld_r1 = (for2_valid == 2'b10 && for2_rt == e_r1) ? 1'b1 : e3_useld_r1;
 
     wire [15:0] e1_rdata0 = (for1_valid && for1_rt == e_r0) ? for1_data : e2_rdata0;
     wire [15:0] e1_rdata1 = (for1_valid && for1_rt == e_r1) ? for1_data : e2_rdata1;
-    wire e1_useld_r0 = (for1_valid == 2'b10 && for1_rt == e_r0) ? 1'b1 : e2_useld_r0;
-    wire e1_useld_r1 = (for1_valid == 2'b10 && for1_rt == e_r1) ? 1'b1 : e2_useld_r1;
 
     wire [15:0] z_rdata0 = e1_rdata0;
     wire [15:0] z_rdata1 = e1_rdata1;
-    wire z_r0_used = e_is_sub | e_is_movh | (e_is_mem_access & (e_is_str | e_is_ld)) | e_is_jump;
-    wire z_r1_used = e_is_sub | (e_is_jump & jump_internal_use);
-    
-    assign d1_stall = e_valid && ((z_r0_used & e1_useld_r0) || (z_r1_used & e1_useld_r1));
+
 
     wire [15:0] result = e_is_sub ? z_rdata0 - z_rdata1 :
                             e_is_movl ? {{7{e_ra[3]}}, e_ra, e_rb} :
@@ -244,16 +234,17 @@ module main();
                                 e_pc + 2;
 
     
-    wire flush = (jump_addr != d1_pc) & e_valid;
+    wire flush = e_valid & m2_valid & (jump_addr != m2_pc);
 
     always @(posedge clk) begin
-        e_pc <= d1_stall ? e_pc : d1_pc;
-        e_valid <= d1_stall ? e_valid : d1_valid & !flush;
-        e_instruct_info <= d1_stall ? e_instruct_info : instruct_info;
-        prev_rdata0 <= d1_stall ? prev_rdata0 : r_rdata0;
-        prev_rdata1 <= d1_stall ? prev_rdata1 : r_rdata1;
-        // e_rdata0 <= m2_rdata0;
-        // e_rdata1 <= m2_rdata1;
+        $display("e_pc = %h, e_valid = %b, jump_addr %h, m2_pc %h, flush %b", e_pc, e_valid, jump_addr, m2_pc, flush);
+        e_pc <= m2_pc;
+        e_valid <= m2_valid & !flush;
+        e_instruct_info <= m2_instruct_info;
+        // prev_rdata0 <= r_rdata0;
+        // prev_rdata1 <=  r_rdata1;
+        e_rdata0 <= m2_rdata0;
+        e_rdata1 <= m2_rdata1;
     end
 
     //forward
@@ -270,10 +261,13 @@ module main();
     reg [1:0] for3_valid = 2'b00;
 
     always @(posedge clk) begin
+        //$display("m_rdata1: %h", m_rdata1);
+        //$display("for1_data: %h, for1_rt: %h, for1_valid: %h", for1_data, for1_rt, for1_valid);
         for1_data <= result;
         for1_rt <= e_rt;
-        for1_valid <= e_valid ? (is_mem_access & is_ld) ? 2'b10 : 2'b01 : 2'b00;
+        for1_valid <= e_valid;
 
+        //$display("for2_data: %h, for2_rt: %h, for2_valid: %h", for2_data, for2_rt, for2_valid);
         for2_data <= for1_data;
         for2_rt <= for1_rt;
         for2_valid <= for1_valid;
@@ -285,87 +279,88 @@ module main();
     end
 
     //memory
-    reg [15:0] m1_pc;
-    reg m1_valid = 1'b0;
-    reg [15:0] m1_result;
-    reg [15:0] m1_jump_addr;
-    reg [15:0] m1_rdata0;
-    reg [15:0] m1_rdata1;
-    reg [15:0] m1_rt;
-    reg m1_is_ld;
-    reg m1_m_wen;
-    reg m1_r_wen;
-    reg m1_is_halt;
+    // reg [15:0] m1_pc;
+    // reg m1_valid = 1'b0;
+    // reg [15:0] m1_result;
+    // reg [15:0] m1_jump_addr;
+    // reg [15:0] m1_rdata0;
+    // reg [15:0] m1_rdata1;
+    // reg [15:0] m1_rt;
+    // reg m1_is_ld;
+    // reg m1_m_wen;
+    // reg m1_r_wen;
+    // reg m1_is_halt;
 
-    always @(posedge clk) begin
-        m1_pc <= e_pc;
-        m1_valid <= d1_stall ? 1'b0 : e_valid;
-        m1_result <= result;
-        m1_jump_addr <= jump_addr;
-        m1_rdata0 <= z_rdata0;
-        m1_rdata1 <= z_rdata1;
-        m1_rt <= e_rt;
-        m1_is_ld <= e_valid & e_is_mem_access & e_is_ld;
-        m1_m_wen <= e_valid & e_is_mem_access & e_is_str;
-        m1_r_wen <= e_valid & (e_rt != 4'b0000) & (e_is_sub | e_is_movl | e_is_movh | e_is_mem_access & e_is_ld);
-        m1_is_halt <= e_valid & e_is_halt;
-    end
+    // always @(posedge clk) begin
+    //     m1_pc <= e_pc;
+    //     m1_valid <= e_valid;
+    //     m1_result <= result;
+    //     m1_jump_addr <= jump_addr;
+    //     m1_rdata0 <= z_rdata0;
+    //     m1_rdata1 <= z_rdata1;
+    //     m1_rt <= e_rt;
+    //     m1_is_ld <= e_valid & e_is_mem_access & e_is_ld;
+    //     m1_m_wen <= e_valid & e_is_mem_access & e_is_str;
+    //     m1_r_wen <= e_valid & (e_rt != 4'b0000) & (e_is_sub | e_is_movl | e_is_movh | e_is_mem_access & e_is_ld);
+    //     m1_is_halt <= e_valid & e_is_halt;
+    // end
 
-    //mem2
-    reg [15:0] m2_pc;
-    reg m2_valid = 1'b0;
-    reg [15:0] m2_result;
-    reg [15:0] m2_jump_addr;
-    reg [15:0] m2_rdata0;
-    reg [15:0] m2_rdata1;
-    reg [15:0] m2_rt;
-    reg m2_m_wen;
-    reg m2_r_wen;
-    reg m2_is_halt;
-    reg m2_is_ld;
-    reg [1:0] m2_store;
+    // //mem2
+    // reg [15:0] m2_pc;
+    // reg m2_valid = 1'b0;
+    // reg [15:0] m2_result;
+    // reg [15:0] m2_jump_addr;
+    // reg [15:0] m2_rdata0;
+    // reg [15:0] m2_rdata1;
+    // reg [15:0] m2_rt;
+    // reg m2_m_wen;
+    // reg m2_r_wen;
+    // reg m2_is_halt;
+    // reg m2_is_ld;
+    // reg [1:0] m2_store;
 
-    always @(posedge clk) begin
-        m2_pc <= m1_pc;
-        m2_valid <= m1_valid;
-        m2_result <= m1_result;
-        m2_jump_addr <= m1_jump_addr;
-        m2_rdata0 <= m1_rdata0;
-        m2_rdata1 <= m1_rdata1;
-        m2_rt <= m1_rt;
-        m2_m_wen <= m1_m_wen;
-        m2_r_wen <= m1_r_wen;
-        m2_is_ld <= m1_is_ld;
-        m2_is_halt <= m1_is_halt;
-        m2_store <= d1_stall ? 2'b01: 2'b10;
-    end
+    // always @(posedge clk) begin
+    //     m2_pc <= m1_pc;
+    //     m2_valid <= m1_valid;
+    //     m2_result <= m1_result;
+    //     m2_jump_addr <= m1_jump_addr;
+    //     m2_rdata0 <= m1_rdata0;
+    //     m2_rdata1 <= m1_rdata1;
+    //     m2_rt <= m1_rt;
+    //     m2_m_wen <= m1_m_wen;
+    //     m2_r_wen <= m1_r_wen;
+    //     m2_is_ld <= m1_is_ld;
+    //     m2_is_halt <= m1_is_halt;
+    //     m2_store <= 2'b10;//d1_stall ? 2'b01: 2'b10;
+    // end
 
 
     //writeback
 
-    assign m_waddr = m2_rdata0;
-    assign m_wdata = m2_rdata1;
-    assign r_waddr = m2_rt;
-    assign r_wdata = m2_is_ld ? m_rdata1 : m2_result;
-    assign m_wen = m2_m_wen;
-    assign r_wen = m2_r_wen;
+    assign m_waddr = e_rdata0;
+    assign m_wdata = e_rdata1;
+    assign r_waddr = e_rt;
+    assign r_wdata = result;
+    assign m_wen = e_valid & e_is_mem_access & e_is_str;
+    assign r_wen = e_valid & (e_rt != 4'b0000) & (e_is_sub | e_is_movl | e_is_movh | e_is_mem_access & e_is_ld);
 
     
     //do something with the pc
     always @(posedge clk) begin
-        if (m2_valid & m2_is_halt) halt <= 1;
+        if (e_valid & e_is_halt) halt <= 1;
         // $display("pc: %h", e_pc);
         // $display("is_sub %b", e_is_sub);
         // $display("is_movl %b", e_is_movl);
         // $display("%h", r_wdata);
         // $display("%h", r_waddr);
-        if(m2_valid & r_waddr == 4'b0000) $write("%c", r_wdata[7:0]);
+        if(e_valid & r_waddr == 4'b0000) $write("%c", r_wdata[7:0]);
     end
 
     always @(posedge clk) begin
-        if(pc == 50) halt <= 1;
+        //if(pc == 50) halt <= 1;
         // $display("flush: %b", flush);
         // $display("jump_addr: %h", jump_addr);
+        //$display("pc: %h", pc);
         if(flush) begin
             pc <= jump_addr;
             for(i = 0; i < 16; i = i + 1) reg_in_use[i] <= 0;

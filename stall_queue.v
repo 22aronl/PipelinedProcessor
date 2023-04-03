@@ -13,8 +13,8 @@ module stall_queue(
 
     always @(posedge clk) begin
         if(flush) begin
-            head <= 2'b00;
-            tail <= 2'b00;
+            // head <= 2'b00;
+            // tail <= 2'b00;
             stall_time <= 2'b00;
         end
         else if (stall) begin
