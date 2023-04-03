@@ -19,13 +19,15 @@ module stall_queue(
         end
         else if (stall) begin
             stall_time <= stall_time + 1;
-            buffer[tail] <= cur_instruction;
-            tail <= (tail + 1) % 2;
+            // buffer[tail] <= cur_instruction;
+            // tail <= (tail + 1) % 2;
         end
         else if(stall_time > 2'b00) begin
             stall_time <= stall_time - 1;
             head <= (head + 1) % 2;
         end
+        buffer[tail] <= cur_instruction;
+        tail <= (tail + 1) % 2;
     end
 
 endmodule

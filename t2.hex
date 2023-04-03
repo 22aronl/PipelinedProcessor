@@ -1,7 +1,7 @@
 @0
+82C2 // movl r2, 002c
 80A1 // mov r1, 10 
-8022 // movl r2, 002c
 f103 // ld r3, r1
 0230 // sub r0, r2, r3
 ffff
-0001 // instruct3:
+0003 // instruct3:

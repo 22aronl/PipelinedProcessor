@@ -66,11 +66,6 @@ module main();
         end
     end
 
-    wire [3:0] reg0 = reg_in_use[0];
-    wire [3:0] reg1 = reg_in_use[1];
-    wire [3:0] reg2 = reg_in_use[2];
-    wire [3:0] reg3 = reg_in_use[3];
-    wire [3:0] reg4 = reg_in_use[4];
 
     //fetch
 
@@ -163,16 +158,17 @@ module main();
     wire pull_forward = m1_valid & e_valid & m1_is_ld & (m1_ra == e_rt);
 
     assign m_raddr1 = pull_forward ? result : m1_instruct_info[1] ? r_rdata0 : 16'h0000;
+
     wire next_stall = m1_valid & m2_valid & m1_is_ld & (m1_ra == m2_rt);
     assign d1_stall = next_stall;
 
     always @(posedge clk) begin
-        m1_pc <= d1_pc;
-        m1_valid <= d1_valid & !flush;
-        m1_instruct_info <= instruct_info;
-        m1_is_ld <= is_ld;
-        m1_ra <= ra;
-        m1_rt <= rt;
+        m1_pc <= d1_stall ? m1_pc : d1_pc;
+        m1_valid <= d1_stall ? m1_valid : d1_valid & !flush;
+        m1_instruct_info <= d1_stall ? m1_instruct_info : instruct_info;
+        m1_is_ld <= d1_stall ? m1_is_ld : is_ld;
+        m1_ra <= d1_stall ? m1_ra : ra;
+        m1_rt <= d1_stall ? m1_rt : rt;
         // m1_rdata0 <= r_rdata0;
         // m1_rdata1 <= r_rdata1;
     end
@@ -188,7 +184,7 @@ module main();
 
     always @(posedge clk) begin
         m2_pc <= m1_pc;
-        m2_valid <= m1_valid & !flush;
+        m2_valid <= m1_valid & !flush & !d1_stall;
         m2_instruct_info <= m1_instruct_info;
         m2_rdata0 <= r_rdata0;
         m2_rdata1 <= r_rdata1;
@@ -271,18 +267,18 @@ module main();
     always @(posedge clk) begin
         //$display("m_rdata1: %h", m_rdata1);
         //$display("for1_data: %h, for1_rt: %h, for1_valid: %h", for1_data, for1_rt, for1_valid);
-        for1_data <= e_valid ? result : for1_data;
-        for1_rt <= e_valid ? e_rt : for1_rt;
-        for1_valid <= e_valid;
+        for1_data <= e_valid | !d1_stall ? result : for1_data;
+        for1_rt <= e_valid | !d1_stall ? e_rt : for1_rt;
+        for1_valid <= e_valid| !d1_stall ;
 
         //$display("for2_data: %h, for2_rt: %h, for2_valid: %h", for2_data, for2_rt, for2_valid);
-        for2_data <= e_valid ? for1_data : for2_data;
-        for2_rt <= e_valid ? for1_rt : for2_rt;
-        for2_valid <= e_valid ? for1_valid : for2_valid;
+        for2_data <= e_valid | !d1_stall ? for1_data : for2_data;
+        for2_rt <= e_valid | !d1_stall ? for1_rt : for2_rt;
+        for2_valid <= e_valid | !d1_stall ? for1_valid : for2_valid;
 
-        for3_data <= e_valid ? for2_data : for3_data;
-        for3_rt <= e_valid ? for2_rt : for3_rt;
-        for3_valid <= e_valid ? for2_valid : for3_valid;
+        for3_data <= e_valid | !d1_stall ? for2_data : for3_data;
+        for3_rt <= e_valid | !d1_stall ? for2_rt : for3_rt;
+        for3_valid <= e_valid | !d1_stall ? for2_valid : for3_valid;
 
     end
 
