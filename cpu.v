@@ -58,13 +58,19 @@ module main();
         .wdata(r_wdata)
     );
 
-    reg  reg_in_use[0:15];
+    reg [3:0] reg_in_use[0:15];
     integer i;
     initial begin
         for(i = 0; i < 16; i = i + 1) begin
-            reg_in_use[i] = 1'b0;
+            reg_in_use[i] = 4'b0000;
         end
     end
+
+    wire [3:0] reg0 = reg_in_use[0];
+    wire [3:0] reg1 = reg_in_use[1];
+    wire [3:0] reg2 = reg_in_use[2];
+    wire [3:0] reg3 = reg_in_use[3];
+    wire [3:0] reg4 = reg_in_use[4];
 
     //fetch
 
@@ -78,29 +84,28 @@ module main();
     end
 
     // //decode
-    wire d1_stall = 1'b0;
+    wire d1_stall;
     //decode1
     reg [15:0] d1_pc;
     reg d1_valid = 1'b0;
+    wire use_q;
 
-
-    stall_queue instruct_buffer(
+    stall_queue buffers (
         .clk(clk),
         .flush(flush),
         .stall(d1_stall),
         .cur_instruction(instruction),
-        .use_q(d1_use_q),
-        .out_instruction(d1_q_instruction)
+        .use_q(use_q),
+        .out_instruction(d1_instruction)
     );
 
-    wire d1_use_q;
-    wire [15:0] d1_q_instruction;
-    wire [15:0] d1_instruction = instruction;//d1_use_q ? d1_q_instruction : instruction;
+    wire [15:0] d1_instruction_wire = use_q ? d1_instruction : instruction;
+    wire [15:0] d1_instruction;
 
-    wire [3:0] opcode = d1_instruction[15:12];
-    wire [3:0] ra = d1_instruction[11:8];
-    wire [3:0] rb = d1_instruction[7:4];
-    wire [3:0] rt = d1_instruction[3:0];
+    wire [3:0] opcode = d1_instruction_wire[15:12];
+    wire [3:0] ra = d1_instruction_wire[11:8];
+    wire [3:0] rb = d1_instruction_wire[7:4];
+    wire [3:0] rt = d1_instruction_wire[3:0];
 
     //is there a better way of doing this?
     wire is_sub = opcode == 4'b0000;
@@ -109,7 +114,7 @@ module main();
     //add check for the individual jumps
     wire is_jump = opcode == 4'b1110;
     wire is_mem_access = opcode == 4'b1111;
-    wire is_ld = rb == 4'b0000;
+    wire is_ld = is_mem_access && rb == 4'b0000;
     wire is_str = rb == 4'b0001;
     wire is_halt = !(is_sub | is_movl | is_movh | is_jump | (is_mem_access && (is_ld | is_str)));
 
@@ -119,15 +124,16 @@ module main();
     wire is_r00 = r_raddr0 == 4'b0000;
     wire is_r10 = r_raddr1 == 4'b0000;
 
-    //can be optimized to only use reg when it is actually beign used
-    //assign d1_stall = 0;//d1_valid & ((!is_r00 & reg_in_use[r_raddr0] != 4'b0000) | (!is_r10 & reg_in_use[r_raddr1] != 4'b0000));
 
     //same here
-    wire [21:0] instruct_info = {ra, rb, rt, is_sub, is_movl, is_movh, is_jump, is_mem_access, is_ld, is_str, is_halt, is_r00, is_r10};
+    wire [29:0] instruct_info = {r_raddr0, r_raddr1, ra, rb, rt, is_sub, is_movl, is_movh, is_jump, is_mem_access, is_ld, is_str, is_halt, is_r00, is_r10};
 
     always @(posedge clk) begin
         d1_pc <= d1_stall ? d1_pc : f1_pc;
         d1_valid <= d1_stall ? d1_valid : f1_valid & !flush;
+        //d1_instruction <= d1_stall ? d1_instruction : instruction;
+
+        //d1_instruct_info <= instruct_info;
     end
 
     // //decode 2
@@ -147,43 +153,58 @@ module main();
     //mem1
     reg [15:0] m1_pc;
     reg m1_valid = 1'b0;
-    reg [21:0] m1_instruct_info;
+    reg [29:0] m1_instruct_info;
     reg [15:0] m1_rdata0;
     reg [15:0] m1_rdata1;
+    reg m1_is_ld = 1'b0;
+    reg [3:0] m1_ra;
+    reg [3:0] m1_rt;
 
+    wire pull_forward = m1_valid & e_valid & m1_is_ld & (m1_ra == e_rt);
 
-    assign m_raddr1 = m1_instruct_info[1] ? r_rdata0 : 16'h0000;
+    assign m_raddr1 = pull_forward ? result : m1_instruct_info[1] ? r_rdata0 : 16'h0000;
+    wire next_stall = m1_valid & m2_valid & m1_is_ld & (m1_ra == m2_rt);
+    assign d1_stall = next_stall;
 
     always @(posedge clk) begin
         m1_pc <= d1_pc;
         m1_valid <= d1_valid & !flush;
         m1_instruct_info <= instruct_info;
-        m1_rdata0 <= r_rdata0;
-        m1_rdata1 <= r_rdata1;
+        m1_is_ld <= is_ld;
+        m1_ra <= ra;
+        m1_rt <= rt;
+        // m1_rdata0 <= r_rdata0;
+        // m1_rdata1 <= r_rdata1;
     end
 
     //mem2
     reg [15:0] m2_pc;
     reg m2_valid = 1'b0;
-    reg [21:0] m2_instruct_info;
+    reg [29:0] m2_instruct_info;
     reg [15:0] m2_rdata0;
     reg [15:0] m2_rdata1;
+    reg m2_is_ld;
+    reg [3:0] m2_rt;
 
     always @(posedge clk) begin
         m2_pc <= m1_pc;
         m2_valid <= m1_valid & !flush;
         m2_instruct_info <= m1_instruct_info;
-        m2_rdata0 <= m1_rdata0;
-        m2_rdata1 <= m1_rdata1;
+        m2_rdata0 <= r_rdata0;
+        m2_rdata1 <= r_rdata1;
+        m2_is_ld <= m1_is_ld;
+        m2_rt <= m1_rt;
     end
 
     //execute
     reg [15:0] e_pc;
     reg e_valid = 0;
-    reg [24:0] e_instruct_info;
+    reg [29:0] e_instruct_info;
     reg [15:0] e_rdata0;
     reg [15:0] e_rdata1;
 
+    wire [3:0] e_r0 = e_instruct_info[29:26];
+    wire [3:0] e_r1 = e_instruct_info[25:22];
     wire [3:0] e_ra = e_instruct_info[21:18];
     wire [3:0] e_rb = e_instruct_info[17:14];
     wire [3:0] e_rt = e_instruct_info[13:10];
@@ -198,28 +219,71 @@ module main();
     wire e_is_r00 = e_instruct_info[1];
     wire e_is_r10 = e_instruct_info[0];
 
-    wire [15:0] z_rdata0 = e_is_r00 ? 16'h0000 : e_rdata0;
-    wire [15:0] z_rdata1 = e_is_r10 ? 16'h0000 : e_rdata1;
+    wire [15:0] e0_rdata0 = e_is_r00 ? 16'h0000 : e_rdata0;
+    wire [15:0] e0_rdata1 = e_is_r10 ? 16'h0000 : e_rdata1;
+
+    wire [15:0] e3_rdata0 = (for3_valid && for3_rt == e_r0) ? for3_data : e0_rdata0;
+    wire [15:0] e3_rdata1 = (for3_valid && for3_rt == e_r1) ? for3_data : e0_rdata1;
+
+    wire [15:0] e2_rdata0 = (for2_valid && for2_rt == e_r0) ? for2_data : e3_rdata0;
+    wire [15:0] e2_rdata1 = (for2_valid && for2_rt == e_r1) ? for2_data : e3_rdata1;
+
+    wire [15:0] e1_rdata0 = (for1_valid && for1_rt == e_r0) ? for1_data : e2_rdata0;
+    wire [15:0] e1_rdata1 = (for1_valid && for1_rt == e_r1) ? for1_data : e2_rdata1;
+
+    wire [15:0] z_rdata0 = e1_rdata0;
+    wire [15:0] z_rdata1 = e1_rdata1;
 
     wire [15:0] result = e_is_sub ? z_rdata0 - z_rdata1 :
                             e_is_movl ? {{7{e_ra[3]}}, e_ra, e_rb} :
                             e_is_movh ? (z_rdata0 & 16'h00ff) | ({e_ra, e_rb} << 8) :
                             e_is_str ? z_rdata0 : m_rdata1;
 
-    wire jump_internal_use = (e_rb == 4'b0000 ? z_rdata0 == 0 :
+    wire [15:0] jump_addr = e_is_jump ? ((e_rb == 4'b0000 ? z_rdata0 == 0 :
                                         e_rb == 4'b0001 ? z_rdata0 != 0 :
-                                        e_rb == 4'b0010 ? z_rdata0 < 0 : z_rdata0 >= 0);
-    wire [15:0] jump_addr = e_is_jump ? (jump_internal_use ? z_rdata1 : e_pc + 2) :
+                                        e_rb == 4'b0010 ? z_rdata0 < 0 : z_rdata0 >= 0) ? z_rdata1 : e_pc + 2) :
                                 e_pc + 2;
 
-    
+
+
     always @(posedge clk) begin
-        $display("jump_addr: %h, m2_pc %h, e_valid %b", jump_addr, m2_pc, e_valid);
         e_pc <= m2_pc;
         e_valid <= m2_valid & !flush;
         e_instruct_info <= m2_instruct_info;
         e_rdata0 <= m2_rdata0;
         e_rdata1 <= m2_rdata1;
+    end
+
+    //forwarding
+    //TODO: only forward when execute is valid
+    reg [15:0] for1_data;
+    reg [3:0] for1_rt;
+    reg [1:0] for1_valid = 2'b00;
+
+    reg [15:0] for2_data;
+    reg [3:0] for2_rt;
+    reg [1:0] for2_valid = 2'b00;
+
+    reg [15:0] for3_data;
+    reg [3:0] for3_rt;
+    reg [1:0] for3_valid = 2'b00;
+
+    always @(posedge clk) begin
+        //$display("m_rdata1: %h", m_rdata1);
+        //$display("for1_data: %h, for1_rt: %h, for1_valid: %h", for1_data, for1_rt, for1_valid);
+        for1_data <= e_valid ? result : for1_data;
+        for1_rt <= e_valid ? e_rt : for1_rt;
+        for1_valid <= e_valid;
+
+        //$display("for2_data: %h, for2_rt: %h, for2_valid: %h", for2_data, for2_rt, for2_valid);
+        for2_data <= e_valid ? for1_data : for2_data;
+        for2_rt <= e_valid ? for1_rt : for2_rt;
+        for2_valid <= e_valid ? for1_valid : for2_valid;
+
+        for3_data <= e_valid ? for2_data : for3_data;
+        for3_rt <= e_valid ? for2_rt : for3_rt;
+        for3_valid <= e_valid ? for2_valid : for3_valid;
+
     end
 
     //writeback
@@ -246,10 +310,9 @@ module main();
     end
 
     always @(posedge clk) begin
-        //if(pc == 100) halt <= 1;
+        if(pc == 50) halt <= 1;
         // $display("flush: %b", flush);
         // $display("jump_addr: %h", jump_addr);
-        //$display("pc: %h", pc);
         if(flush) begin
             pc <= jump_addr;
             for(i = 0; i < 16; i = i + 1) reg_in_use[i] <= 0;
