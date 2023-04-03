@@ -1,0 +1,32 @@
+[*]
+[*] GTKWave Analyzer v3.3.108 (w)1999-2020 BSI
+[*] Sun Apr 02 23:29:35 2023
+[*]
+[dumpfile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\t1.vcd"
+[dumpfile_mtime] "Sun Apr 02 23:18:29 2023"
+[dumpfile_size] 16019
+[savefile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\vcd_viewer.gtkw"
+[timestart] 0
+[size] 1437 612
+[pos] -1 -1
+*-12.000000 690 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] main.
+[sst_width] 254
+[signals_width] 150
+[sst_expanded] 1
+[sst_vpaned_height] 217
+@22
+main.pc[15:0]
+main.f1_pc[15:0]
+main.d1_pc[15:0]
+main.d2_pc[15:0]
+main.m1_pc[15:0]
+main.m2_pc[15:0]
+main.e_pc[15:0]
+main.regs.raddr0_[3:0]
+main.regs.rdata0[15:0]
+main.regs.raddr1_[3:0]
+main.regs.rdata1[15:0]
+main.regs.rdata0[15:0]
+[pattern_trace] 1
+[pattern_trace] 0

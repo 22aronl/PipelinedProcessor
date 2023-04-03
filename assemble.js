@@ -1,4 +1,3 @@
-//Code from eric
 // syntax:
 //  # comment
 //  label:
