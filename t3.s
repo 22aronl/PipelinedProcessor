@@ -1,5 +1,9 @@
-mov r1, instruct3 
-movl r2, 002c
+mov r1, instruct1
 ld r3, r1
-sub r0, r2, r3
-instruct3:0001
+ld r4, r3
+ld r5, r4
+ld r6, r5
+mov r7, '='
+sub r6, r7, r6
+sub r0, r6, r0
+instruct1:

@@ -1,7 +1,11 @@
 @0
-8081 // mov r1, instruct3 
-8022 // movl r2, 002c
+8101 // mov r1, instruct1
 f103 // ld r3, r1
-0230 // sub r0, r2, r3
+f304 // ld r4, r3
+f405 // ld r5, r4
+f506 // ld r6, r5
+83d7 // mov r7, '='
+0766 // sub r6, r7, r6
+0600 // sub r0, r6, r0
 ffff
-0001 // instruct3:
+0010 // instruct1:
