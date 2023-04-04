@@ -282,8 +282,17 @@ module main();
 
     end
 
+    reg [15:0] stored_jump_addr;
+    reg check_valid = 1'b0;
+
+    always @(posedge clk) begin
+        stored_jump_addr <= e_valid ? jump_addr : stored_jump_addr;
+        check_valid <= e_valid;
+    end
+
+    //Todo: i have no idea if this works or not
     //writeback
-    wire flush = (jump_addr != m2_pc) & e_valid;
+    wire flush = ((jump_addr != m2_pc) & e_valid & m2_valid) | (check_valid & !e_valid & m2_valid & (stored_jump_addr != m2_pc));
 
     assign m_waddr = z_rdata0;
     assign m_wdata = z_rdata1;
