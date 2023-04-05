@@ -84,6 +84,7 @@ module main();
     reg [15:0] d1_pc;
     reg d1_valid = 1'b0;
     wire use_q;
+    wire [15:0] d1_instruction;
 
     stall_queue buffers (
         .clk(clk),
@@ -95,7 +96,6 @@ module main();
     );
 
     wire [15:0] d1_instruction_wire = d1_instruction;//use_q ? d1_instruction : instruction;
-    wire [15:0] d1_instruction;
 
     wire [3:0] opcode = d1_instruction_wire[15:12];
     wire [3:0] ra = d1_instruction_wire[11:8];

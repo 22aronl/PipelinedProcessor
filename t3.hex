@@ -7,5 +7,5 @@ f506 // ld r6, r5
 83d7 // mov r7, '='
 0766 // sub r6, r7, r6
 0600 // sub r0, r6, r0
-ffff
+ffff //Tests load into loads
 0012 // instruct1:
