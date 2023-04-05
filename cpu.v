@@ -84,7 +84,9 @@ module main();
     reg [15:0] d1_pc;
     reg d1_valid = 1'b0;
     wire use_q;
+    //why do used variables in a module have to be declared before?
     wire [15:0] d1_instruction;
+    wire flush;
 
     stall_queue buffers (
         .clk(clk),
@@ -292,7 +294,7 @@ module main();
 
     //Todo: i have no idea if this works or not
     //writeback
-    wire flush = ((jump_addr != m2_pc) & e_valid & m2_valid) | (check_valid & !e_valid & m2_valid & (stored_jump_addr != m2_pc));
+    assign flush = ((jump_addr != m2_pc) & e_valid & m2_valid) | (check_valid & !e_valid & m2_valid & (stored_jump_addr != m2_pc));
 
     assign m_waddr = z_rdata0;
     assign m_wdata = z_rdata1;
