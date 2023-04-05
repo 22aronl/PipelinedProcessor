@@ -51,5 +51,7 @@ module stall_queue(
             buffer[tail] <= cur_instruction;
             tail <= (tail + 1) % SIZE;
         end
+        else 
+            stall_time <= (stall_time + SIZE - 1) % SIZE;
     end
 endmodule
