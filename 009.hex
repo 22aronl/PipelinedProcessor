@@ -1,0 +1,80 @@
+@0
+//This tests data hazards for registers and memory
+
+//Test 1 - should print out 'abc' - tests register data hazards
+8611 	// movl r1, 97 
+100 	// sub r0, r1, r0   //Prints 'a'
+
+8622 	// movl r2, 98
+fff 	// buffer
+200 	// sub r0, r2, r0   //Prints 'b'
+
+8633 	// movl r3, 99
+fff 	// buffer
+fff 	// buffer
+300 	// sub r0, r3, r0   //Prints 'c'
+
+80a0 	// movl r0, 10      //Newline
+
+//Test 2 - should print out 'def' - should forward "youngest" instruction
+8784 	// movl r4, 120     //'z'
+8644 	// movl r4, 100
+400 	// sub r0, r4, r0   //Prints 'd'
+
+8785 	// movl r5, 120     //'z'
+8655 	// movl r5, 101
+fff 	// buffer
+500 	// sub r0, r5, r0   //Prints 'e'
+
+8786 	// movl r6, 120     //'z'
+8666 	// movl r6, 102
+fff 	// buffer
+fff 	// buffer
+600 	// sub r0, r6, r0   //Prints 'f'
+
+80a0 	// movl r0, 10      //Newline
+
+//Test 3 - should print out 'ghi' - tests load/store hazards
+8677 	// movl r7, 103
+f017 	// st r7, r0
+f000 	// ld r0, r0        //Prints 'g'
+
+8688 	// movl r8, 104
+f018 	// st r8, r0
+fff 	// buffer
+f000 	// ld r0, r0        //Prints 'h'
+
+8699 	// movl r9, 105
+f019 	// st r9, r0
+fff 	// buffer
+fff 	// buffer
+f000 	// ld r0, r0        //Prints 'i'
+
+80a0 	// movl r0, 10      //Newline
+
+//Test 4 - should print out 'aaa' - tests load data hazards
+861a 	// movl r10, 97
+f01a 	// st r10, r0
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+fff 	// buffer
+
+f00b 	// ld r11, r0
+b00 	// sub r0, r11, r0  //Prints 'a'
+
+f00c 	// ld r12, r0
+fff 	// buffer
+c00 	// sub r0, r12, r0  //Prints 'a'
+
+f00d 	// ld r13, r0
+fff 	// buffer
+fff 	// buffer
+d00 	// sub r0, r13, r0  //Prints 'a'
+
+ffff 	// halt

@@ -306,7 +306,9 @@ module main();
     
     //do something with the pc
     always @(posedge clk) begin
-        if (e_valid & e_is_halt) halt <= 1;
+	if (e_valid & e_is_halt) begin 
+	    halt <= 1;
+	end
         if (e_valid & !e_is_jump) reg_in_use[e_rt] <= reg_in_use[e_rt] - 1;
         // $display("pc: %h", e_pc);
         // $display("is_sub %b", e_is_sub);
