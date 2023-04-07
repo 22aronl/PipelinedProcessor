@@ -1,0 +1,449 @@
+@0
+/*
+
+    This is a forwarding test case. 
+    
+    Table of Contents: 
+        Test 1:             Movl updates a register, then tests that a sub 
+                            instruction correctly receives the forwarded value 
+                            of that register. 
+        Test 2:             Ld updates a register, then tests that a sub 
+                            instruction correctly receives the forwarded value 
+                            of that register.
+        Test 3:             After several instructions that update a register, 
+                            ensure that the most RECENT update is chosen. 
+        Test 4:             St updates a memory address, then tests that a ld 
+                            instruction correctly gets the value 
+                            of that memory address. (This may never require
+                            forwarding, depending on implementation details.)
+        Test 5:             For implementing jump instructions, it is common to 
+                            flush the pipeline when a jump is encountered. 
+                            This test ensures that you are not forwarding 
+                            values from flushed instructions.
+                            
+*/
+
+
+
+//==============================================================================================
+//Test 1: MOVL. This test should print out "ABCDEF". This tests that everything works when the movl 
+// and sub instructions are various cycles apart. (Some tests may not require forwarding.)
+
+8411        // movl r1, 65                  Put 65 into r1
+0100        // sub r0, r1, r0               Prints r1 (which should be A with correct forwarding)
+000A        // sub r10, r0, r0              This acts as my no-op 
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A   
+
+8421         // movl r1, 66                 Put 66 into r1
+000A
+0100         // sub r0, r1, r0              Prints r1 (which should be B with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A 
+000A 
+
+8431         // movl r1, 67                 Put 67 into r1
+000A
+000A
+0100         // sub r0, r1, r0              Prints r1 (which should be C with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+8441         // movl r1, 68                 Put 68 into r1
+000A
+000A
+000A
+0100         // sub r0, r1, r0              Prints r1 (which should be D with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A 
+000A 
+
+8451         // movl r1, 69                 Put 69 into r1
+000A
+000A
+000A
+000A
+0100         // sub r0, r1, r0              Prints r1 (which should be E with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A 
+000A 
+
+8461         // movl r1, 70                 Put 70 into r1
+000A
+000A
+000A
+000A
+000A
+0100         // sub r0, r1, r0              Prints r1 (which should be F with correct forwarding)
+80a0         //                             Prints a newline character   
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A 
+000A 
+
+
+
+
+
+
+
+//==============================================================================================
+//Test 2: LD. This test should print out "ABCDEF". This tests that everything works when the ld 
+// and sub instructions are various cycles apart.  
+
+8001         // movl r1, 00                 Put 0 into r1
+8412         // movl r2, 65                 Put 65 into r2
+000A
+000A
+000A
+000A
+000A
+000A
+F112         // st r2, r1                   Store 65 into mem[0]
+000A
+000A
+000A
+000A
+000A
+000A
+F103         // ld r3, r1                   Put mem[0] into r3
+0300         // sub r0, r3, r0              Prints r3 (which should be A with correct forwarding)
+
+8422         // movl r2, 66                 Put 66 into r2
+000A
+000A
+000A
+000A
+000A
+000A
+F112         // st r2, r1                   Store 66 into mem[0]
+000A
+000A
+000A
+000A
+000A
+000A
+F103         // ld r3, r1                   Put mem[0] into r3
+000A
+0300         // sub r0, r3, r0              Prints r3 (which should be B with correct forwarding)
+
+8432         // movl r2, 67                 Put 67 into r2
+000A
+000A
+000A
+000A
+000A
+000A
+F112         // st r2, r1                   Store 67 into mem[0]
+000A
+000A
+000A
+000A
+000A
+000A
+F103         // ld r3, r1                   Put mem[0] into r3
+000A
+000A
+0300         // sub r0, r3, r0              Prints r3 (which should be C with correct forwarding)
+
+8442         // movl r2, 68                 Put 68 into r2
+000A
+000A
+000A
+000A
+000A
+000A
+F112         // st r2, r1                   Store 68 into mem[0]
+000A
+000A
+000A
+000A
+000A
+000A
+F103         // ld r3, r1                   Put mem[0] into r3
+000A
+000A
+000A
+0300         // sub r0, r3, r0              Prints r3 (which should be D with correct forwarding)
+
+8452         // movl r2, 69                 Put 69 into r2
+000A
+000A
+000A
+000A
+000A
+000A
+F112         // st r2, r1                   Store 69 into mem[0]
+000A
+000A
+000A
+000A
+000A
+000A
+F103         // ld r3, r1                   Put mem[0] into r3
+000A
+000A
+000A
+000A
+0300         // sub r0, r3, r0              Prints r3 (which should be E with correct forwarding)
+
+8462         // movl r2, 70                 Put 70 into r2
+000A
+000A
+000A
+000A
+000A
+000A
+F112         // st r2, r1                   Store 70 into mem[0]
+000A
+000A
+000A
+000A
+000A
+000A
+F103         // ld r3, r1                   Put mem[0] into r3
+000A
+000A
+000A
+000A
+000A
+0300         // sub r0, r3, r0              Prints r3 (which should be F with correct forwarding)
+80a0         //                             Prints a newline character
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+
+
+
+
+
+//==============================================================================================
+//Test 3: Most recent forwarded value. This test should print out "ABCDEF". This attempts to test
+// that the most recent value is forwarded. It also tries to test that values from other register
+// are not forwarded! 
+
+8421         // movl r1, 66                 Put 66 into r1 (The ASCII code for B)
+8411         // movl r1, 65                 Put 65 into r1 (The ASCII code for A)
+0100         // sub r0, r1, r0              Prints r1 (which should be A with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+8432         // movl r2, 67                 Put 67 into r2 (The ASCII code for C)
+8442         // movl r2, 68                 Put 68 into r2 (The ASCII code for D)
+8422         // movl r2, 66                 Put 66 into r2 (The ASCII code for B)
+0200         // sub r0, r2, r0              Prints r2 (which should be B with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+8431         // movl r1, 67                 Put 67 into r1 (The ASCII code for C)
+8442         // movl r2, 68                 Put 68 into r2 (The ASCII code for D)
+0100         // sub r0, r1, r0              Prints r1 (which should be C with correct forwarding)
+F012         // st r2, r0                   Store 68 into mem[0] (for the next test)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+F104         // ld r4, r1                   Put mem[67] into r4
+000A
+F004         // ld r4, r0                   Put mem[0] into r4
+0400         // sub r0, r4, r0              Prints r4 (which should be D with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+F005         // ld r5, r0                   Put mem[0] into r5 
+889E         // movl r14,  137              Put 137 into r14 (this will end up being sign extended)
+0E55         // sub r5, r14, r5             Puts 69 into r5 (r5 = r14 - r5)
+0500         // sub r0, r5, r0              Prints r5 (which should be E with correct forwarding)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+8463          // movl r3, 70                 Put 70 into r3 (The ASCII code for F)
+0304          // sub r4, r3, r0              Puts r3 into r4 
+0402          // sub r2, r4, r0              Puts r4 into r2
+0201          // sub r1, r2, r0              Puts r2 into r1
+0100          // sub r0, r1, r0              Prints r1 (which should be F with correct forwarding)
+80a0          //                             Prints a newline character
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+
+
+
+
+
+
+
+//==============================================================================================
+//Test 4: ST then LD. This test should print out "ABCD". This attempts to test
+// that if you store a value into a memory address, if a load attempts to read from 
+// that same address, it will get the correct value. 
+
+
+//Testing a store then load owo 
+8412         // movl r2, 65                 Put 65 into r2
+F012         // st r2, r0                   Store 65 into mem[0]
+F003         // ld r3, r0                   Put mem[0] into r3
+0300         // sub r0, r3, r0              Prints r3 (which should be A)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+8422         // movl r2, 66                 Put 66 into r2
+F012         // st r2, r0                   Store 66 into mem[0]
+000A
+F003         // ld r3, r0                   Put mem[0] into r3
+0300         // sub r0, r3, r0              Prints r3 (which should be B)
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+8432         // movl r2, 67                 Put 67 into r2
+F012         // st r2, r0                   Store 67 into mem[0]
+000A
+000A
+F003         // ld r3, r0                   Put mem[0] into r3
+0300         // sub r0, r3, r0              Prints r3 (which should be C)
+8021         //movl r1, 2                   Put 2 into r1 (used for the next test)         
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+//Tests that values will not be forwarded to loads accessing a different memory address 
+8442         // movl r2, 68                 Put 68 into r2
+F012         // st r2, r0                   Store 68 into mem[0]
+F113         // st r3, r1                   Store 67 into mem[2]
+F003         // ld r3, r0                   Put mem[0] into r3
+0300         // sub r0, r3, r0              Prints r3 (which should be D)
+80a0
+000A
+000A
+000A
+000A
+000A
+000A
+000A
+
+
+
+
+
+
+//==============================================================================================
+// Test 5: JUMP. This test should print out "A". This tests that you do not forward 
+// values if you are flushing. This also checks if you correctly forward values to a jump 
+// instruction. 
+
+8412         // movl r2, 65                 Put 65 into r2
+8B81         // movl r1,                    Put B8 into r1
+9021         // movh r1, shrug              Puts 0x02B8 into r1 (this will be where we jump)
+E001         // jz r1, r0                   Jumps to 0x02B8
+8422         // movl r2, 66                 Hopefully this value isn't forwarded to r2!
+8422 
+8422 
+8422 
+8422 
+8422 
+8422 
+8422 
+8422 
+0200                                        //this is where we jump to! Prints r2, which should be A
+
+FFFF

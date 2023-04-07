@@ -1,0 +1,170 @@
+[*]
+[*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
+[*] Fri Apr  7 19:46:20 2023
+[*]
+[dumpfile] "/Users/aaronlo/Desktop/CS429H/p6/cs429h_s23_p6_aaronlo/cpu.vcd"
+[dumpfile_mtime] "Fri Apr  7 19:22:17 2023"
+[dumpfile_size] 41557
+[savefile] "/Users/aaronlo/Desktop/CS429H/p6/cs429h_s23_p6_aaronlo/grouping.gtkw"
+[timestart] 0
+[size] 1210 767
+[pos] -1 -1
+*0.000000 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 193
+[signals_width] 141
+[sst_expanded] 1
+[sst_vpaned_height] 226
+@22
+main.pc[15:0]
+@c00200
+-fetch1
+@22
+main.f1_pc[15:0]
+@28
+main.f1_valid
+@1401200
+-fetch1
+@28
+main.d1_stall
+@c00200
+-decode1
+@22
+main.d1_pc[15:0]
+@28
+main.d1_valid
+@22
+main.d1_instruction[15:0]
+main.opcode[3:0]
+main.ra[3:0]
+main.rb[3:0]
+main.rt[3:0]
+@28
+main.is_sub
+main.is_movl
+main.is_movh
+main.is_jump
+main.is_mem_access
+main.is_ld
+main.is_str
+main.is_halt
+@22
+main.r_raddr0[3:0]
+main.r_raddr1[3:0]
+@28
+main.is_r00
+main.is_r10
+@22
+main.instruct_info[29:0]
+@1401200
+-decode1
+@c00200
+-memory1
+@22
+main.m1_pc[15:0]
+@28
+main.m1_valid
+@22
+main.m1_ra[3:0]
+main.m1_rt[3:0]
+main.m1_instruct_info[29:0]
+@28
+main.m1_is_ld
+main.pull_forward
+@22
+main.m_raddr1[15:0]
+main.r_rdata0[15:0]
+main.r_rdata1[15:0]
+@1401200
+-memory1
+@c00200
+-memory2
+@22
+main.m2_pc[15:0]
+@28
+main.m2_valid
+@22
+main.m2_instruct_info[29:0]
+main.m2_rdata0[15:0]
+main.m2_rdata1[15:0]
+@28
+main.m2_is_ld
+@22
+main.m2_rt[3:0]
+@1401200
+-memory2
+@c00200
+-execute
+@22
+main.e_pc[15:0]
+@28
+main.e_valid
+@22
+main.e_instruct_info[29:0]
+main.e_rdata0[15:0]
+main.e_rdata1[15:0]
+main.e_r0[3:0]
+main.e_r1[3:0]
+main.e_ra[3:0]
+main.e_rb[3:0]
+main.e_rt[3:0]
+@28
+main.e_is_str
+main.e_is_movl
+main.e_is_movh
+main.e_is_jump
+main.e_is_mem_access
+main.e_is_ld
+main.e_is_str
+main.e_is_halt
+main.e_is_r00
+main.e_is_r10
+@22
+main.e0_rdata0[15:0]
+main.e0_rdata1[15:0]
+main.e3_rdata0[15:0]
+main.e3_rdata1[15:0]
+main.e2_rdata0[15:0]
+main.e2_rdata1[15:0]
+main.e1_rdata0[15:0]
+main.e1_rdata1[15:0]
+main.z_rdata0[15:0]
+main.z_rdata1[15:0]
+@1401200
+-execute
+@c00200
+-forwarding
+@28
+main.for1_valid[1:0]
+@22
+main.for1_rt[3:0]
+main.for1_data[15:0]
+@28
+main.for2_valid[1:0]
+@22
+main.for2_rt[3:0]
+main.for2_data[15:0]
+@28
+main.for3_valid[1:0]
+@22
+main.for3_rt[3:0]
+main.for3_data[15:0]
+@28
+main.pull_forward
+@1401200
+-forwarding
+@c00200
+-writeback
+@28
+main.flush
+@22
+main.m_waddr[15:0]
+main.m_wdata[15:0]
+main.r_waddr[3:0]
+main.r_wdata[15:0]
+@28
+main.m_wen
+main.r_wen
+@1401200
+-writeback
+[pattern_trace] 1
+[pattern_trace] 0

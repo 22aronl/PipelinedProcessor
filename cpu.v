@@ -157,6 +157,8 @@ module main();
     reg [3:0] m1_ra;
     reg [3:0] m1_rt;
 
+
+    //TODO: Load forwarding is not correct
     wire pull_forward = m1_valid & e_valid & m1_is_ld & (m1_ra == e_rt);
 
     assign m_raddr1 = pull_forward ? result : m1_instruct_info[1] ? r_rdata0 : 16'h0000;
@@ -269,7 +271,7 @@ module main();
     always @(posedge clk) begin
         //$display("m_rdata1: %h", m_rdata1);
         //$display("for1_data: %h, for1_rt: %h, for1_valid: %h", for1_data, for1_rt, for1_valid);
-        for1_data <= e_valid  ? result : for1_data;
+        for1_data <= e_valid ? (e_rt==4'b0000) ? 0 : result : for1_data;
         for1_rt <= e_valid  ? e_rt : for1_rt;
         for1_valid <= e_valid ? 1'b1 : for1_valid;
 
@@ -303,11 +305,12 @@ module main();
     assign m_wen = e_valid & e_is_mem_access & e_is_str;
     assign r_wen = e_valid & (r_waddr != 4'b0000) & (e_is_sub | e_is_movl | e_is_movh | e_is_mem_access & e_is_ld);
 
-    
+    reg should_write_more = 1'b1;
     //do something with the pc
     always @(posedge clk) begin
 	if (e_valid & e_is_halt) begin 
 	    halt <= 1;
+        should_write_more <= 0;
 	end
         if (e_valid & !e_is_jump) reg_in_use[e_rt] <= reg_in_use[e_rt] - 1;
         // $display("pc: %h", e_pc);
@@ -315,11 +318,10 @@ module main();
         // $display("is_movl %b", e_is_movl);
         // $display("%h", r_wdata);
         // $display("%h", r_waddr);
-        if(e_valid & r_waddr == 4'b0000) $write("%c", r_wdata[7:0]);
+        if(should_write_more & e_valid & r_waddr == 4'b0000) $write("%c", r_wdata[7:0]);
     end
 
     always @(posedge clk) begin
-        if(pc == 50) halt <= 1;
         // $display("flush: %b", flush);
         // $display("jump_addr: %h", jump_addr);
         if(flush) begin
