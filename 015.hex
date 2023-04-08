@@ -1,0 +1,24 @@
+// This test has four consecutive loads, each load depending on the load before it.
+
+// Memory is set with the following values:
+// Byte address (in hex)    Word at byte address (in hex)
+// -----------------------------------------------------
+// 70                       0072
+// 72                       0074
+// 74                       0076
+// 76                       0041 ('A')
+
+
+@0
+8701  // movl r1, 0x70
+f102  // ld r2, r1  # Should load 72 into r2 from address r1 = 70
+f203  // ld r3, r2  # Should load 74 into r3 from address r2 = 72
+f304  // ld r4, r3  # Should load 76 into r4 from address r3 = 74
+f400  // ld r0, r4  # Should load 41 into r0 from address r4 = 76 (prints 'A')
+ffff  // END
+
+@38  // This is byte address 70
+0072  // Byte address 70
+0074  // Byte address 72
+0076  // Byte address 74
+0041  // Byte address 76

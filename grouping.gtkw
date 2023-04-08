@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.108 (w)1999-2020 BSI
-[*] Sat Apr 08 08:43:33 2023
+[*] Sat Apr 08 09:27:23 2023
 [*]
-[dumpfile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\049.vcd"
-[dumpfile_mtime] "Sat Apr 08 08:39:48 2023"
-[dumpfile_size] 139357
+[dumpfile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\032.vcd"
+[dumpfile_mtime] "Sat Apr 08 09:26:48 2023"
+[dumpfile_size] 79468
 [savefile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\grouping.gtkw"
-[timestart] 235360
+[timestart] 131670
 [size] 1653 859
 [pos] -1 -1
-*-11.000000 239000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-11.000000 135000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] main.
 [sst_width] 254
 [signals_width] 230
@@ -70,6 +70,7 @@ main.is_str
 main.is_halt
 @22
 main.r_raddr0[3:0]
+@23
 main.r_raddr1[3:0]
 @28
 main.is_r00
@@ -127,8 +128,12 @@ main.m2_r0_rdata0[15:0]
 main.m2_rb[3:0]
 main.m_waddr[15:0]
 main.m_wdata[15:0]
-@29
+@28
 main.m_wen
+main.flush
+main.m2_is_jump
+@22
+main.m2_jump_addr[15:0]
 @1000200
 -memory2
 @c00200
@@ -146,6 +151,12 @@ main.e_is_str
 main.e_is_halt
 @1401200
 -execute
+@28
+main.r_wen
+main.m2_is_movh
+@22
+main.r_waddr[3:0]
+main.r_wdata[15:0]
 @800200
 -forward
 @28
@@ -168,6 +179,8 @@ main.e_forward3_addr[3:0]
 main.e_forward3_data[15:0]
 @1000200
 -forward
+@28
+main.m2_jump_taken
 @c00200
 -writeback
 @28

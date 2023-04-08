@@ -1,0 +1,23 @@
+/* 
+ * This tests loads into loads (which requires stalling) and loads into jumps
+ * (which can be implemented by reusing the stalling logic). Being a short
+ * testcase is obviously a feature to make debugging easier
+ */ 
+@0
+808f
+e00f
+8690 // print 'i'
+ffff
+804f //terminate by jumping to rf = 4
+8611 // mov r1 'a'
+8122
+8343
+8564
+f411 // st m56 'a'
+f314 // st m34 56
+f213 // st m12 34
+f205 // ld m12 r5
+f506 // ld m34 r6
+f600 // ld m56 r0
+f208
+e81f
