@@ -1,0 +1,52 @@
+@0
+80aa // loop register
+801b // b = 1
+806c // c = 6 (next line)
+8500 // Another t0 esque thing
+8490
+8500
+8450
+84c0
+8490
+84e0
+8450
+80a0
+
+// now for the real thing
+
+8002 // Set r2 to 0
+8401 // A ... F
+8411
+8421
+8431
+8441
+8451
+8461
+0120 // Only F
+0120
+0120
+0120
+0120
+0120
+0120
+0120
+
+// Alternating instructions
+
+8411
+0120
+8421
+0120
+8431
+0120
+8441
+0120
+8451
+0120
+8461
+0120
+80a0
+
+0aba // decrement the loop counter and jump back if nonzero
+ea1c
+6969

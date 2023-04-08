@@ -1,17 +1,18 @@
 [*]
-[*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Fri Apr  7 19:46:20 2023
+[*] GTKWave Analyzer v3.3.108 (w)1999-2020 BSI
+[*] Sat Apr 08 08:43:33 2023
 [*]
-[dumpfile] "/Users/aaronlo/Desktop/CS429H/p6/cs429h_s23_p6_aaronlo/cpu.vcd"
-[dumpfile_mtime] "Fri Apr  7 19:22:17 2023"
-[dumpfile_size] 41557
-[savefile] "/Users/aaronlo/Desktop/CS429H/p6/cs429h_s23_p6_aaronlo/grouping.gtkw"
-[timestart] 0
-[size] 1210 767
+[dumpfile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\049.vcd"
+[dumpfile_mtime] "Sat Apr 08 08:39:48 2023"
+[dumpfile_size] 139357
+[savefile] "C:\Users\Aaron Lo\Documents\cs429h\p6\cs429h_s23_p6_aaronlo\grouping.gtkw"
+[timestart] 235360
+[size] 1653 859
 [pos] -1 -1
-*0.000000 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
-[sst_width] 193
-[signals_width] 141
+*-11.000000 239000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] main.
+[sst_width] 254
+[signals_width] 230
 [sst_expanded] 1
 [sst_vpaned_height] 226
 @22
@@ -26,14 +27,34 @@ main.f1_valid
 -fetch1
 @28
 main.d1_stall
-@c00200
+@800200
 -decode1
 @22
 main.d1_pc[15:0]
 @28
 main.d1_valid
-@22
+@c00022
 main.d1_instruction[15:0]
+@28
+(0)main.d1_instruction[15:0]
+(1)main.d1_instruction[15:0]
+(2)main.d1_instruction[15:0]
+(3)main.d1_instruction[15:0]
+(4)main.d1_instruction[15:0]
+(5)main.d1_instruction[15:0]
+(6)main.d1_instruction[15:0]
+(7)main.d1_instruction[15:0]
+(8)main.d1_instruction[15:0]
+(9)main.d1_instruction[15:0]
+(10)main.d1_instruction[15:0]
+(11)main.d1_instruction[15:0]
+(12)main.d1_instruction[15:0]
+(13)main.d1_instruction[15:0]
+(14)main.d1_instruction[15:0]
+(15)main.d1_instruction[15:0]
+@1401200
+-group_end
+@22
 main.opcode[3:0]
 main.ra[3:0]
 main.rb[3:0]
@@ -55,7 +76,7 @@ main.is_r00
 main.is_r10
 @22
 main.instruct_info[29:0]
-@1401200
+@1000200
 -decode1
 @c00200
 -memory1
@@ -69,14 +90,14 @@ main.m1_rt[3:0]
 main.m1_instruct_info[29:0]
 @28
 main.m1_is_ld
-main.pull_forward
 @22
 main.m_raddr1[15:0]
 main.r_rdata0[15:0]
+main.m_raddr1[15:0]
 main.r_rdata1[15:0]
 @1401200
 -memory1
-@c00200
+@800200
 -memory2
 @22
 main.m2_pc[15:0]
@@ -89,8 +110,26 @@ main.m2_rdata1[15:0]
 @28
 main.m2_is_ld
 @22
+main.m2_result[15:0]
+@28
+main.m2_is_sub
+@22
+main.m2_data0[15:0]
+main.m2_data1[15:0]
+main.m2_r0[3:0]
+main.m2_r1[3:0]
 main.m2_rt[3:0]
-@1401200
+@28
+main.m2_is_jump
+main.m2_jump_taken
+@22
+main.m2_r0_rdata0[15:0]
+main.m2_rb[3:0]
+main.m_waddr[15:0]
+main.m_wdata[15:0]
+@29
+main.m_wen
+@1000200
 -memory2
 @c00200
 -execute
@@ -99,59 +138,36 @@ main.e_pc[15:0]
 @28
 main.e_valid
 @22
-main.e_instruct_info[29:0]
-main.e_rdata0[15:0]
-main.e_rdata1[15:0]
-main.e_r0[3:0]
-main.e_r1[3:0]
-main.e_ra[3:0]
-main.e_rb[3:0]
 main.e_rt[3:0]
 @28
 main.e_is_str
-main.e_is_movl
-main.e_is_movh
-main.e_is_jump
-main.e_is_mem_access
 main.e_is_ld
 main.e_is_str
 main.e_is_halt
-main.e_is_r00
-main.e_is_r10
-@22
-main.e0_rdata0[15:0]
-main.e0_rdata1[15:0]
-main.e3_rdata0[15:0]
-main.e3_rdata1[15:0]
-main.e2_rdata0[15:0]
-main.e2_rdata1[15:0]
-main.e1_rdata0[15:0]
-main.e1_rdata1[15:0]
-main.z_rdata0[15:0]
-main.z_rdata1[15:0]
 @1401200
 -execute
-@c00200
--forwarding
+@800200
+-forward
 @28
-main.for1_valid[1:0]
+main.e_forward_valid
 @22
-main.for1_rt[3:0]
-main.for1_data[15:0]
+main.e_forward_data[15:0]
+main.e_forward_addr[3:0]
 @28
-main.for2_valid[1:0]
+main.e_forward2_valid
+main.flush
 @22
-main.for2_rt[3:0]
-main.for2_data[15:0]
+main.e_forward2_data_[15:0]
+main.m_rdata1[15:0]
+main.e_forward2_addr[3:0]
+main.e_forward2_data[15:0]
 @28
-main.for3_valid[1:0]
+main.e_forward3_valid
 @22
-main.for3_rt[3:0]
-main.for3_data[15:0]
-@28
-main.pull_forward
-@1401200
--forwarding
+main.e_forward3_addr[3:0]
+main.e_forward3_data[15:0]
+@1000200
+-forward
 @c00200
 -writeback
 @28
@@ -166,5 +182,7 @@ main.m_wen
 main.r_wen
 @1401200
 -writeback
+@22
+main.d1_instruction_wire[15:0]
 [pattern_trace] 1
 [pattern_trace] 0

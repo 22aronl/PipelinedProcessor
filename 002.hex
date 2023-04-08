@@ -1,0 +1,48 @@
+@0
+8412 // mov r2, 'A'
+8e07 // mov r7, 0xE0
+9007
+f712 // st r2, r7
+85b3 // mov r3, 0x5B
+8014 // mov r4, 0x01
+8f08 // mov r8, 0xF0
+9008
+     // loop:
+f701 // 	ld r1, r7
+     // 	inLoop:
+f811 // 		st r1, r8
+f800 // 		ld r0, r8
+0011 // 		add r1, r1, r4
+0411
+0215 // 		sub r5, r2, r1
+8126 // 		mov r6, inLoop
+9006
+e536 // 		jns r6, r5
+80a0 // 	mov r0, 10
+0022 // 	add r2, r2, r4
+0422
+0235 // 	sub r5, r2, r3
+8106 // 	mov r6, loop
+9006
+e526 // 	js r6, r5
+0141 // sub r1, r1, r4
+f702 // ld r2, r7
+f711 // st r1, r7
+     // loop2:
+f701 // 	ld r1, r7
+     // 	inLoop2:
+f811 // 		st r1, r8
+f800 // 		ld r0, r8
+0215 // 		sub r5, r2, r1
+0141 // 		sub r1, r1, r4
+8386 // 		mov r6, inLoop2
+9006
+e516 // 		jnz r6, r5
+80a0 // 	mov r0, 10
+0022 // 	add r2, r2, r4
+0422
+0235 // 	sub r5, r2, r3
+8366 // 	mov r6, loop2
+9006
+e526 // 	js r6, r5
+ffff
